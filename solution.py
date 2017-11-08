@@ -88,6 +88,9 @@ def reduce_puzzle(values):
         #  Use the Only Choice Strategy
         values = only_choice(values)
 
+        #  Use the naked Twins Strategy
+        values = naked_twins(values)
+
         # Check how many boxes have a determined value, to compare
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         # If no new values were added, stop the loop.
@@ -175,4 +178,4 @@ if __name__ == '__main__':
     except SystemExit:
         pass
     except:
-        print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
