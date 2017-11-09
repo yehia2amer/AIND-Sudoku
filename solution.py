@@ -46,6 +46,21 @@ def grid_values(grid):
             values.append(item)
     return dict(zip(boxes,values))
 
+def assign_value(values, box, value):
+    """
+    Please use this function to update your values dictionary!
+    Assigns a value to a given box. If it updates the board record it.
+    """
+
+    # Don't waste memory appending actions that don't actually change any values
+    if values[box] == value:
+        return values
+
+    values[box] = value
+    if len(value) == 1:
+        assignments.append(values.copy())
+    return values
+
 def eliminate(values):
     """
     Use Elimination constraint propagation technique to eliminate values.
@@ -109,10 +124,12 @@ def search(values):
     
     # First, reduce the puzzle using the previous function
     values = reduce_puzzle(values)
+
     if values is False:
         return False ## Failed earlier
     if all(len(values[s]) == 1 for s in boxes): 
         return values ## Solved!
+
     # Choose one of the unfilled squares with the fewest possibilities
     n,s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
     # Now use recurrence to solve each one of the resulting sudokus, and 
@@ -124,16 +141,27 @@ def search(values):
             return attempt
 
 def naked_twins(values):
-    #Find all twins, then find all naked twins
-    twins = [box for box in values.keys() if len(values[box]) == 2]
-    naked_twins = {}
+    """Eliminate values using the naked twins strategy.
+    Args:
+        values(dict): a dictionary of the form {'box_name': '123456789', ...}
 
-    for twin in twins:
-        for peer in peers[twin]:
-            if (values[twin] == values[peer] and peer in twins):
-                    if (peer + twin not in naked_twins.keys() and twin + peer not in naked_twins.keys() ):
-                        naked_twins[twin + peer] = values[twin]
-                        # print("Peer : " + peer + " & " + twin + " = " + values[twin])
+    Returns:
+        the values dictionary with the naked twins eliminated from peers.
+    """
+
+    # Find all instances of naked twins
+    # Eliminate the naked twins as possibilities for their peers
+
+    # Find all possible twins
+    possible_twins = [box for box in values.keys() if len(values[box]) == 2]
+
+    # Find all Naked twins
+    naked_twins = {}
+    for ptwin in possible_twins:
+        for peer in peers[ptwin]:
+            if (values[ptwin] == values[peer] and peer in possible_twins):
+                    if (peer + ptwin not in naked_twins.keys() and ptwin + peer not in naked_twins.keys() ):
+                        naked_twins[ptwin + peer] = values[ptwin]
 
     #Remove Naked Twins
     for naked_twin in naked_twins:
@@ -147,8 +175,10 @@ def naked_twins(values):
     
         naked_twin_peers_intersection = [x for x in first_cell_peers.intersection(second_cell_peers) if len(values[x]) != 1]
         for x in naked_twin_peers_intersection:
+
             table = {ord(char): None for char in values[first_cell]}
-            values[x] = values[x].translate(table)
+            assign_value(values, x, values[x].translate(table))
+
     return values
 
 def solve(grid):
@@ -168,7 +198,7 @@ def solve(grid):
         return False
 
 if __name__ == '__main__':
-    diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    diag_sudoku_grid = '9.1....8.8.5.7..4.2.4....6...7......5..............83.3..6......9................'
     display(solve(diag_sudoku_grid))
 
     try:
@@ -178,4 +208,4 @@ if __name__ == '__main__':
     except SystemExit:
         pass
     except:
-print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+        print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
